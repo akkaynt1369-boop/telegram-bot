@@ -15,7 +15,7 @@ R2_ACCOUNT_ID = "5cfa2fdd7dfd7957d6c663c9ed0de2e4"           # Из правог
 R2_ACCESS_KEY_ID = "0cac9f513feb0c298725e4f8db4e59dc"        # 32 символа, который вы проверили
 R2_SECRET_ACCESS_KEY = "bf876addc66197d48fbad659d9263e37fb3ce7ab777ada82fc9b60111fe207b5"                     # ПОЛНЫЙ секретный ключ (скопируйте из Cloudflare)
 R2_BUCKET_NAME = "mystillfots"                               # Название вашего бакета
-R2_PUBLIC_URL = "https://pub-509a306816994714a761c583f2788500.r2.dev"  # URL после включения Public Access
+R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL")  # URL после включения Public Access
 # ==========================================================
 
 # Буфер для альбомов (чтобы несколько фото в одном сообщении объединять)
