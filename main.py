@@ -1,6 +1,5 @@
 import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-
+import os
 import asyncio
 from collections import defaultdict
 from telegram import Update
@@ -8,20 +7,17 @@ from telegram.ext import Application, MessageHandler, filters
 import boto3
 from botocore.config import Config
 
-# ================== ВСТАВЬТЕ ВАШИ ДАННЫЕ ==================
-BOT_TOKEN = "8801223775:AAEM8J_Ip-uEhVvba9P3DsARsnXyyakwR4U"   # Токен от @BotFather (новый, если старый скомпрометирован)
+ssl._create_default_https_context = ssl._create_unverified_context
 
-R2_ACCOUNT_ID = "5cfa2fdd7dfd7957d6c663c9ed0de2e4"           # Из правого нижнего угла Cloudflare
-R2_ACCESS_KEY_ID = "0cac9f513feb0c298725e4f8db4e59dc"        # 32 символа, который вы проверили
-R2_SECRET_ACCESS_KEY = "bf876addc66197d48fbad659d9263e37fb3ce7ab777ada82fc9b60111fe207b5"                     # ПОЛНЫЙ секретный ключ (скопируйте из Cloudflare)
-R2_BUCKET_NAME = "mystillfots"                               # Название вашего бакета
-R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL")  # URL после включения Public Access
-# ==========================================================
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")
+R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
+R2_BUCKET_NAME = "mystillfots"
+R2_PUBLIC_URL = "https://pub-509a306816994714a761c583f2788500.r2.dev"
 
-# Буфер для альбомов (чтобы несколько фото в одном сообщении объединять)
 album_buffer = defaultdict(lambda: {"photos": [], "caption": "", "timer": None})
 
-# Клиент для загрузки в R2
 s3_client = boto3.client(
     "s3",
     endpoint_url=f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com",
@@ -46,19 +42,17 @@ async def handle_photo(update: Update, context):
     photo = update.message.photo[-1]
     file = await context.bot.get_file(photo.file_id)
     file_data = await file.download_as_bytearray()
-
     filename = f"{update.effective_user.id}_{photo.file_id}.jpg"
     r2_url = await upload_to_r2(file_data, filename)
+
     if not r2_url:
         await update.message.reply_text("Ошибка загрузки фото. Попробуйте позже.")
         return
 
-    # Если одиночное фото
     if not media_group_id:
         await update.message.reply_text(f"{r2_url}\n\n{caption}")
         return
 
-    # Альбом: собираем фото, отправляем одно сообщение через 2 секунды
     album = album_buffer[media_group_id]
     album["photos"].append(r2_url)
     if caption and not album["caption"]:
