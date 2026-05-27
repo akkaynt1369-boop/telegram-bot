@@ -1,5 +1,7 @@
 import ssl
 import os
+import random
+import string
 import asyncio
 from collections import defaultdict
 from telegram import Update
@@ -27,6 +29,11 @@ s3_client = boto3.client(
     region_name="auto"
 )
 
+def generate_short_name(ext="jpg"):
+    """Генерирует случайное имя из 13 букв/цифр"""
+    chars = string.ascii_letters + string.digits
+    return ''.join(random.choices(chars, k=13)) + f".{ext}"
+
 async def upload_to_r2(file_data, filename):
     try:
         s3_client.put_object(Bucket=R2_BUCKET_NAME, Key=filename, Body=file_data)
@@ -42,7 +49,10 @@ async def handle_photo(update: Update, context):
     photo = update.message.photo[-1]
     file = await context.bot.get_file(photo.file_id)
     file_data = await file.download_as_bytearray()
-    filename = f"{update.effective_user.id}_{photo.file_id}.jpg"
+
+    # Генерируем короткое имя из 13 символов
+    filename = generate_short_name()
+
     r2_url = await upload_to_r2(file_data, filename)
 
     if not r2_url:
@@ -77,8 +87,9 @@ async def handle_photo(update: Update, context):
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    print("Бот запущен с R2. Ожидание фото...")
+    print("Бот запущен с R2. Короткие имена (13 символов). Ожидание фото...")
     app.run_polling()
 
 if __name__ == "__main__":
     main()
+    
