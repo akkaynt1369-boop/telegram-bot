@@ -13,12 +13,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID")
 R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID")
 R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY")
-R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "mystillfots")
-R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL")
-
-# Запасной длинный URL, если переменная не задана
-if not R2_PUBLIC_URL:
-    R2_PUBLIC_URL = "https://pub-509a306816994714a761c583f2788500.r2.dev"
+R2_BUCKET_NAME = "mystillfots"
+R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL", "https://pub-509a306816994714a761c583f2788500.r2.dev")
 
 album_buffer = defaultdict(lambda: {"photos": [], "caption": "", "timer": None})
 
@@ -81,7 +77,7 @@ async def handle_photo(update: Update, context):
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    print("Бот запущен. Ожидание фото...")
+    print("Бот запущен с R2. Ожидание фото...")
     app.run_polling()
 
 if __name__ == "__main__":
